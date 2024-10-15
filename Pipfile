@@ -7,8 +7,12 @@ name = "pypi"
 flask = "*"
 flask-migrate = "*"
 flask-sqlalchemy = "*"
+flask-bcrypt = "*"
+flask-cors = "*"
+pymysql = "*"
+sqlalchemy = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.10"
+python_version = "3"
