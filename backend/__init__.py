@@ -14,9 +14,11 @@ from backend.models.user import User
 
 from backend.extensions import bcrypt, db, migrate
 
+from backend.routes import user as user_routes
+
 def create_backend():
     app = Flask(__name__).split(".")[0]
-    app.config.from_pyfile('../.env', silent=True)  # override settings from parent .env if it exists
+    app.config.from_pyfile('../.env', silent=True)
     register_extensions(app)
     register_blueprints(app)
     configure_logger(app)
@@ -35,6 +37,7 @@ def register_requestwrapper(app):
 
 def register_blueprints(app):
     """Register blueprints."""
+    app.register_blueprint(user_routes.bp, url_prefix='/api/user')
     return None
 
 def configure_logger(app):
