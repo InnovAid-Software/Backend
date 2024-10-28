@@ -5,11 +5,7 @@ import logging
 import sys
 from flask import Flask
 from backend import routes
-
-from backend.models.course import Course
-from backend.models.coursesection import CourseSection
 from backend.models.registrationqueue import RegistrationQueue
-from backend.models.schedule import Schedule
 from backend.models.user import User
 
 from backend.extensions import bcrypt, db, migrate, mail
@@ -18,7 +14,7 @@ from backend.routes import user as user_routes
 from backend.routes import queue as queue_routes
 
 def create_backend():
-    app = Flask(__name__).split(".")[0]
+    app = Flask(__name__.split(".")[0])
     app.config.from_pyfile('../.env', silent=True)
     register_extensions(app)
     register_blueprints(app)
