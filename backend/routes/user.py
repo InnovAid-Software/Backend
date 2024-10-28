@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app
-from backend.models.user import User, UserType
-from backend.models.registrationqueue import RegistrationQueue
+from backend.models.user import User, UserType, RegistrationQueue
 from backend.extensions import db, mail
 from flask_bcrypt import Bcrypt
 from itsdangerous import URLSafeTimedSerializer

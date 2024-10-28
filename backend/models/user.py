@@ -1,40 +1,56 @@
-from backend.database import Model, SurrogatePK, Column, relationship, reference_col
+from backend.database import Model, SurrogatePK, Column
 from backend.extensions import db, bcrypt
-
 import enum
-from flask import current_app, url_for
+from flask import current_app
 from itsdangerous import URLSafeTimedSerializer
 from itsdangerous.exc import SignatureExpired, BadSignature
 import datetime as dt
-
-from backend.models.registrationqueue import RegistrationQueue
 
 class UserType(enum.Enum):
     STUDENT = "STUDENT"
     ROOT = "ROOT"
     ADMIN = "ADMIN"
 
+class RequestType(enum.Enum):
+    ADMIN = "ADMIN"
+    ROOT = "ROOT"
+
+class RegistrationQueue(Model, SurrogatePK):
+    """Registration queue model."""
+    __tablename__ = 'registration_queue'
+
+    approved = Column(db.Boolean(), default=False, nullable=False)
+    request_type = Column(db.Enum(RequestType), nullable=False)
+    user_id = Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
+    user = db.relationship('User', backref=db.backref('registration_request', uselist=False))
+
+    def __init__(self, user, request_type, **kwargs):
+        """Create instance."""
+        super().__init__(user_id=user.id, request_type=request_type, **kwargs)
+
+    def approve(self):
+        """Approve request."""
+        self.approved = True
+        self.user.verified = True
+        db.session.add(self.user)
+        return self.save()
+
+    def reject(self):
+        """Reject request."""
+        return self.delete()
 
 class User(Model, SurrogatePK):
+    """User model."""
+    __tablename__ = 'users'
 
     email = Column(db.String(80), unique=True, nullable=False, isPrivate=True)
     password = Column(db.LargeBinary(128), nullable=True, isInternal=True)
     verified = Column(db.Boolean(), default=False)
     user_type = Column(db.Enum(UserType), nullable=False)
 
-    def __init__(self, username, email, password=None, **kwargs):
-        """
-        Create a new User instance.
-        
-        Usage:
-            user = User(username='johndoe', email='john@example.com', password='secret')
-        
-        :param username: The user's username
-        :param email: The user's email address
-        :param password: The user's password (optional)
-        :param kwargs: Additional keyword arguments for other User attributes
-        """
-        super().__init__(username=username, email=email, **kwargs)
+    def __init__(self, email, password=None, **kwargs):
+        """Create instance."""
+        super().__init__(email=email, **kwargs)
         if password:
             self.set_password(password)
         else:

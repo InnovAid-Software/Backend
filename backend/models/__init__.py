@@ -1,2 +1,3 @@
-from . import user
-from . import registrationqueue
+from backend.models.user import User, RegistrationQueue
+
+__all__ = ['User', 'RegistrationQueue']

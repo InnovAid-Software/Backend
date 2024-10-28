@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
-from backend.models.user import User, UserType
-from backend.models.registrationqueue import RegistrationQueue
+from backend.models.user import User, UserType, RegistrationQueue
 from backend.extensions import db
 
 bp = Blueprint('queue', __name__)
