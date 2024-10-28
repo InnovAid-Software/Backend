@@ -12,7 +12,7 @@ from backend.models.registrationqueue import RegistrationQueue
 from backend.models.schedule import Schedule
 from backend.models.user import User
 
-from backend.extensions import bcrypt, db, migrate, mail, message
+from backend.extensions import bcrypt, db, migrate, mail
 
 from backend.routes import user as user_routes
 from backend.routes import queue as queue_routes
@@ -32,7 +32,6 @@ def register_extensions(app):
     db.init_app(app)
     migrate.init_app(app, db)
     mail.init_app(app)
-    message.init_app(app)
     return None
 
 def register_requestwrapper(app):
