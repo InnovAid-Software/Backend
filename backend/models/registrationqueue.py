@@ -29,8 +29,8 @@ class RegistrationQueue(Model, SurrogatePK):
         return self.save()
 
     def reject(self):
-        """Reject the registration request"""
-        self.approved = False
-        self.user.verified = False
-        db.session.add(self.user)
-        return self.save()
+        """
+        Reject the registration request by deleting it from the queue
+        and ensuring the user remains unverified
+        """
+        return self.delete()
