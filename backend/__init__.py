@@ -12,7 +12,7 @@ from backend.models.registrationqueue import RegistrationQueue
 from backend.models.schedule import Schedule
 from backend.models.user import User
 
-from backend.extensions import bcrypt, db, migrate
+from backend.extensions import bcrypt, db, migrate, mail, message
 
 from backend.routes import user as user_routes
 from backend.routes import queue as queue_routes
@@ -20,6 +20,14 @@ from backend.routes import queue as queue_routes
 def create_backend():
     app = Flask(__name__).split(".")[0]
     app.config.from_pyfile('../.env', silent=True)
+    #Putting these here (talk to abbie)
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 465
+    app.config['MAIL_USERNAME'] = 'innovaidssp@gmail.com'
+    app.config['MAIL_PASSWORD'] = 'gabn vucv fhod dxtm' #this should work as our app password for the email but needs testing
+    app.config['MAIL_USE_TLS'] = False
+    app.config['MAIL_USE_SSL'] = True
+    #end of mail config
     register_extensions(app)
     register_blueprints(app)
     configure_logger(app)
@@ -31,6 +39,8 @@ def register_extensions(app):
     bcrypt.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
+    mail.init_app(app)
+    message.init_app(app)
     return None
 
 def register_requestwrapper(app):
