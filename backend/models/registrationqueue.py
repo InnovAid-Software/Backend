@@ -22,9 +22,15 @@ class RegistrationQueue(Model, SurrogatePK):
         return f"<RegistrationQueue(user_id={self.user_id}, request_type={self.request_type}, approved={self.approved})>"
 
     def approve(self):
+        """Approve the registration request"""
         self.approved = True
+        self.user.verified = True
+        db.session.add(self.user)
         return self.save()
 
     def reject(self):
-        return self.delete()
-
+        """Reject the registration request"""
+        self.approved = False
+        self.user.verified = False
+        db.session.add(self.user)
+        return self.save()

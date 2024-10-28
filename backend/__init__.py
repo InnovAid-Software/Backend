@@ -15,6 +15,7 @@ from backend.models.user import User
 from backend.extensions import bcrypt, db, migrate
 
 from backend.routes import user as user_routes
+from backend.routes import queue as queue_routes
 
 def create_backend():
     app = Flask(__name__).split(".")[0]
@@ -38,6 +39,7 @@ def register_requestwrapper(app):
 def register_blueprints(app):
     """Register blueprints."""
     app.register_blueprint(user_routes.bp, url_prefix='/api/user')
+    app.register_blueprint(queue_routes.bp, url_prefix='/api/queue')
     return None
 
 def configure_logger(app):
