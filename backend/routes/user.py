@@ -17,7 +17,7 @@ def login():
     user = User.query.filter_by(email=data['email']).first()
     if user and user.check_password(data['password']):
         token, expires_on = user.generate_token()
-        return jsonify({'token': token.decode('utf-8'), 'expires_on': expires_on}), 200
+        return jsonify({'token': token.decode('utf-8'), 'expires_on': expires_on, 'role': user.get_role()}), 200
     return jsonify({'message': 'Invalid credentials'}), 401
 
 @bp.route('/register', methods=['POST'])

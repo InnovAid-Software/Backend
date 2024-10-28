@@ -180,3 +180,15 @@ class User(Model, SurrogatePK):
             return User.query.filter_by(email=email).first()
         except (SignatureExpired, BadSignature):
             return None
+    def get_role(self):
+        """
+        Get the user's role (user type).
+        
+        Usage:
+            role = user.get_role()
+            print(f"User's role is: {role}")
+        
+        :return: The user's role as a UserType enum value
+        """
+        return self.user_type
+
