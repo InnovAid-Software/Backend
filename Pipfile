@@ -12,6 +12,8 @@ flask-cors = "*"
 pymysql = "*"
 sqlalchemy = "*"
 flask-mail = "*"
+itsdangerous = "*"
+python-dotenv = "*"
 
 [dev-packages]
 
