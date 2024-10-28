@@ -44,6 +44,6 @@ def verify(token):
     return jsonify({'message': 'Invalid or expired token'}), 400
 
 
-def send_verification_email(email, token):
+async def send_verification_email(email, token):
     # This is a dummy function for sending verification email
     print(f"Sending verification email to {email} with token: {token}")
