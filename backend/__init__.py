@@ -20,14 +20,6 @@ from backend.routes import queue as queue_routes
 def create_backend():
     app = Flask(__name__).split(".")[0]
     app.config.from_pyfile('../.env', silent=True)
-    #Putting these here (talk to abbie)
-    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-    app.config['MAIL_PORT'] = 465
-    app.config['MAIL_USERNAME'] = 'innovaidssp@gmail.com'
-    app.config['MAIL_PASSWORD'] = 'gabn vucv fhod dxtm' #this should work as our app password for the email but needs testing
-    app.config['MAIL_USE_TLS'] = False
-    app.config['MAIL_USE_SSL'] = True
-    #end of mail config
     register_extensions(app)
     register_blueprints(app)
     configure_logger(app)

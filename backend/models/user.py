@@ -79,20 +79,20 @@ class User(Model, SurrogatePK):
         Generate a timed JWT token for the user.
         
         Usage:
-            token, expiry = user.generate_token()
+            token, expires_on = user.generate_token()
             # or with custom expiration
-            token, expiry = user.generate_token(expiration=3600)  # 1 hour
+            token, expires_on = user.generate_token(expiration=3600)  # 1 hour
         
         :param expiration: Token expiration time in seconds (default is 900 seconds / 15 minutes)
-        :return: A tuple containing the token and its expiration datetime
+        :return: A tuple of (token, expires_on datetime)
         """
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
         expires_on = dt.datetime.now() + dt.timedelta(seconds=expiration)
-        serializer = TJWSS(current_app.config['SECRET_KEY'], expires_in=expiration)
         token = serializer.dumps({
-                'id': self.id,
-                'email': self.email,
-                'user_type': self.user_type
-            })
+            'id': self.id,
+            'email': self.email,
+            'user_type': self.user_type.value
+        }, salt=current_app.config['EMAIL_VERIFICATION_SALT'])
         return token, expires_on
 
     def addUserToQueue(self, queue):
@@ -123,15 +123,16 @@ class User(Model, SurrogatePK):
         :param token: The JWT token to verify
         :return: The User object if the token is valid, None otherwise
         """
-        serializer = TJWSS(current_app.config['SECRET_KEY'])
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
         try:
-            data = serializer.loads(token)
+            data = serializer.loads(
+                token,
+                salt=current_app.config['EMAIL_VERIFICATION_SALT'],
+                max_age=900  # 15 minutes
+            )
+            return User.query.get(data['id'])
         except (SignatureExpired, BadSignature):
-            return None  # token has expired or is invalid
-
-        # Since the token contains the user id, we can load the object and return it
-        user = User.query.get(data['id'])
-        return user
+            return None
 
     def generate_verification_token(self, expiration=604800):
         """
@@ -146,7 +147,10 @@ class User(Model, SurrogatePK):
         :return: A URL-safe verification token
         """
         serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-        return serializer.dumps(self.email, salt=current_app.config['EMAIL_VERIFICATION_SALT'])
+        return serializer.dumps(
+            self.email,
+            salt=current_app.config['EMAIL_VERIFICATION_SALT']
+        )
 
     @staticmethod
     def verify_token(token, expiration=604800):
@@ -173,6 +177,6 @@ class User(Model, SurrogatePK):
                 salt=current_app.config['EMAIL_VERIFICATION_SALT'],
                 max_age=expiration
             )
-        except:
+            return User.query.filter_by(email=email).first()
+        except (SignatureExpired, BadSignature):
             return None
-        return User.query.filter_by(email=email).first()

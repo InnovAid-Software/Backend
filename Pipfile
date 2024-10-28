@@ -11,6 +11,7 @@ flask-bcrypt = "*"
 flask-cors = "*"
 pymysql = "*"
 sqlalchemy = "*"
+flask-mail = "*"
 
 [dev-packages]
 

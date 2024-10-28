@@ -1,9 +1,11 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from backend.models.user import User, UserType
 from backend.models.registrationqueue import RegistrationQueue
 from backend.extensions import db, mail, message
 from flask_bcrypt import Bcrypt
 from itsdangerous import URLSafeTimedSerializer
+import asyncio
+from flask_mail import Message
 
 
 bp = Blueprint('user', __name__)
@@ -33,8 +35,13 @@ def register():
         return jsonify({'message': 'User added to verification queue'}), 201
     else:
         verification_token = user.generate_verification_token()
-        send_verification_email(user.email, verification_token)
-        return jsonify({'message': 'Verification email sent'}), 201
+        try:
+            send_verification_email(user.email, verification_token)
+            return jsonify({'message': 'Verification email sent'}), 201
+        except Exception as e:
+            # Log the error
+            current_app.logger.error(f"Failed to send verification email: {str(e)}")
+            return jsonify({'message': 'User registered but failed to send verification email'}), 500
 
 @bp.route('/verify/<token>', methods=['GET'])
 def verify(token):
@@ -47,21 +54,18 @@ def verify(token):
 
 
 def send_verification_email(email, token):
+    """
+    Send a verification email to the user.
+    
+    :param email: The recipient's email address
+    :param token: The verification token
+    """
     verification_url = f'http://innovaid.dev/verify/{token}'
-    msg = message('Please verify your email', recipients=[email])
+    msg = Message(
+        'Please check your email for a verification link.',
+        sender=current_app.config['MAIL_USERNAME'],
+        recipients=[email]
+    )
     msg.body = f'Click the link to verify your email: {verification_url}'
-    mail.send(msg) #see about declarations
-    print(f"Sending verification email to {email} with token: {token}")
-
-#go over this with abbie later and see if these will work for token generation
-def generate_verification_token(email):
-    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])  #work this out
-    return serializer.dumps(email, salt='email-confirmation-salt')
-
-def confirm_verification_token(token, expiration=3600):
-    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-    try:
-        email = serializer.loads(token, salt='email-confirmation-salt', max_age=expiration)
-    except:
-        return False
-    return email
+    mail.send(msg)
+    print(f"Verification email sent to {email}")
