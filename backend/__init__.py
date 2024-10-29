@@ -1,5 +1,4 @@
 """Main backend package."""
-from flask_cors import CORS
 import logging
 import sys
 import os
@@ -16,7 +15,6 @@ def create_backend():
     register_extensions(app)
     register_blueprints(app)
     configure_logger(app)
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
     return app
 
 def register_extensions(app):
