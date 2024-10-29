@@ -185,4 +185,8 @@ class User(Model, SurrogatePK):
         :return: The user's role as a UserType enum value
         """
         return self.user_type
+    
+    def is_verified(self):
+        """Check if the user is verified."""
+        return self.verified
 
