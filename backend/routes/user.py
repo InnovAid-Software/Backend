@@ -21,7 +21,7 @@ def login():
 def register():
     data = request.get_json()
     hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
-    user = User(username=data['username'], email=data['email'], password=hashed_password, user_type=UserType(data['user_type']))
+    user = User(email=data['email'], password=hashed_password, usertype=UserType(data['user_type']))
     db.session.add(user)
     db.session.commit()
 
