@@ -63,7 +63,7 @@ def send_verification_email(email, token):
     """
     verification_url = f'http://innovaid.dev/verify/{token}'
     msg = Message(
-        'Please check your email for a verification link.',
+        'Please click the below link to verify your email.',
         sender=current_app.config['MAIL_USERNAME'],
         recipients=[email]
     )
