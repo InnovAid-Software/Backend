@@ -95,12 +95,13 @@ class User(Model, SurrogatePK):
             current_app.config['SECRET_KEY'],
             salt='auth-token'
         )
+        expiration_time = dt.datetime.utcnow() + dt.timedelta(seconds=expiration)
         token_data = {
             'id': self.id,
             'email': self.email,
-            'exp': dt.datetime.utcnow() + dt.timedelta(seconds=expiration)
+            'exp': expiration_time.isoformat()
         }
-        return serializer.dumps(token_data), token_data['exp']
+        return serializer.dumps(token_data), expiration_time.isoformat()
 
     @staticmethod
     def check_token(token):
