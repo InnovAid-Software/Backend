@@ -1,12 +1,10 @@
 from flask import Blueprint, request, jsonify, current_app, redirect
 from backend.models.user import User, UserType, RegistrationQueue
-from backend.extensions import db, mail
-from flask_bcrypt import Bcrypt
+from backend.extensions import db, mail, bcrypt
 from itsdangerous import URLSafeTimedSerializer
 from flask_mail import Message
 
 bp = Blueprint('user', __name__)
-bcrypt = Bcrypt()
 
 @bp.route('/login', methods=['POST'])
 def login():
@@ -20,10 +18,9 @@ def login():
 @bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
     user = User(
         email=data['email'], 
-        password=hashed_password, 
+        password=data['password'], 
         user_type=UserType(data['user_type'].upper())
     )
     db.session.add(user)
