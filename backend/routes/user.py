@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, redirect
 from backend.models.user import User, UserType, RegistrationQueue
 from backend.extensions import db, mail
 from flask_bcrypt import Bcrypt
@@ -50,7 +50,7 @@ def verify(token):
     if user:
         user.verified = True
         db.session.commit()
-        return jsonify({'message': 'Email verified successfully'}), 200
+        return redirect('https://innovaid.dev')
     return jsonify({'message': 'Invalid or expired token'}), 400
 
 
