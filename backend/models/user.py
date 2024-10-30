@@ -101,7 +101,7 @@ class User(Model, SurrogatePK):
             'email': self.email,
             'exp': expiration_time.isoformat()
         }
-        return serializer.dumps(token_data).decode('utf-8'), expiration_time.isoformat()
+        return serializer.dumps(token_data), expiration_time.isoformat()
 
     @staticmethod
     def check_token(token):
