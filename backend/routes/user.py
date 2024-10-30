@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app, redirect
-from backend.models.user import User, UserType, RegistrationQueue
+from backend.models.user import User, UserType, RegistrationQueue, RequestType
 from backend.extensions import db, mail, bcrypt
 from itsdangerous import URLSafeTimedSerializer
 from flask_mail import Message
@@ -27,7 +27,8 @@ def register():
     db.session.commit()
 
     if user.user_type in [UserType.ADMIN, UserType.ROOT]:
-        queue = RegistrationQueue(user=user, request_type=user.user_type)
+        request_type = RequestType[user.user_type.name]
+        queue = RegistrationQueue(user=user, request_type=request_type)
         db.session.add(queue)
         db.session.commit()
         return jsonify({'message': 'User added to verification queue'}), 201
@@ -37,7 +38,6 @@ def register():
             send_verification_email(user.email, verification_token)
             return jsonify({'message': 'Verification email sent'}), 201
         except Exception as e:
-            # Log the error
             current_app.logger.error(f"Failed to send verification email: {str(e)}")
             return jsonify({'message': 'User registered but failed to send verification email'}), 500
 
