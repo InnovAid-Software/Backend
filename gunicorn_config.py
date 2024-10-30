@@ -13,10 +13,12 @@ loglevel = "info"
 
 # Process naming
 proc_name = "innovaid_backend"
-
-# SSL (if needed)
-# keyfile = "path/to/keyfile"
-# certfile = "path/to/certfile"
-
 # Worker class
 worker_class = "sync"
+
+# Preload app
+preload_app = True
+
+# Max requests
+max_requests = 1000
+max_requests_jitter = 50
