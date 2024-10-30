@@ -61,7 +61,7 @@ def send_verification_email(email, token):
     :param email: The recipient's email address
     :param token: The verification token
     """
-    verification_url = f'http://innovaid.dev/api/verify/{token}'
+    verification_url = f'http://innovaid.dev/api/user/verify/{token}'
     msg = Message(
         'Please click the below link to verify your email.',
         sender=current_app.config['MAIL_USERNAME'],
