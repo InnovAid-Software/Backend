@@ -18,6 +18,12 @@ def login():
 @bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
+    
+    # Check if user already exists
+    existing_user = User.query.filter_by(email=data['email']).first()
+    if existing_user:
+        return jsonify({'message': 'Email already registered'}), 409
+    
     user = User(
         email=data['email'], 
         password=data['password'], 
