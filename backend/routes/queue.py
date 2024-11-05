@@ -6,11 +6,12 @@ bp = Blueprint('queue', __name__)
 
 @bp.route('', methods=['GET'])
 def get_queue():
-    data = request.get_json()
-    if not data or 'token' not in data:
-        return jsonify({'message': 'Missing token'}), 401
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({'message': 'Missing or invalid authorization header'}), 401
     
-    user = User.check_token(data['token'])
+    token = auth_header.split(' ')[1]
+    user = User.check_token(token)
     if not user or user.user_type not in [UserType.ADMIN, UserType.ROOT]:
         return jsonify({'message': 'Unauthorized access'}), 403
 
@@ -26,14 +27,16 @@ def get_queue():
 
 @bp.route('', methods=['POST'])
 def process_queue_request():
-    data = request.get_json()
-    if not data or 'token' not in data:
-        return jsonify({'message': 'Missing token'}), 401
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({'message': 'Missing or invalid authorization header'}), 401
     
-    admin_user = User.check_token(data['token'])
+    token = auth_header.split(' ')[1]
+    admin_user = User.check_token(token)
     if not admin_user or admin_user.user_type not in [UserType.ADMIN, UserType.ROOT]:
         return jsonify({'message': 'Unauthorized access'}), 403
 
+    data = request.get_json()
     if not all(k in data for k in ['email', 'approval_status']):
         return jsonify({'message': 'Missing required fields'}), 400
 
