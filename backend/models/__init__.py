@@ -1,5 +1,3 @@
-from . import user
-from . import course
-from . import coursesection
-from . import registrationqueue
-from . import schedule
+from backend.models.user import User, RegistrationQueue
+
+__all__ = ['User', 'RegistrationQueue']

@@ -1,41 +1,56 @@
-from backend.database import Model, SurrogatePK, Column, relationship, reference_col
+from backend.database import Model, SurrogatePK, Column
 from backend.extensions import db, bcrypt
-
 import enum
-from flask import current_app, url_for
-from itsdangerous import TimedJSONWebSignatureSerializer as TJWSS, SignatureExpired, BadSignature
+from flask import current_app
 from itsdangerous import URLSafeTimedSerializer
-
+from itsdangerous.exc import SignatureExpired, BadSignature
 import datetime as dt
-
-from backend.models.registrationqueue import RegistrationQueue
 
 class UserType(enum.Enum):
     STUDENT = "STUDENT"
     ROOT = "ROOT"
     ADMIN = "ADMIN"
 
+class RequestType(enum.Enum):
+    ADMIN = "ADMIN"
+    ROOT = "ROOT"
+
+class RegistrationQueue(Model, SurrogatePK):
+    """Registration queue model."""
+    __tablename__ = 'registration_queue'
+
+    approved = Column(db.Boolean(), default=False, nullable=False)
+    request_type = Column(db.Enum(RequestType), nullable=False)
+    user_id = Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
+    user = db.relationship('User', backref=db.backref('registration_request', uselist=False))
+
+    def __init__(self, user, request_type, **kwargs):
+        """Create instance."""
+        super().__init__(user_id=user.id, request_type=request_type, **kwargs)
+
+    def approve(self):
+        """Approve request."""
+        self.approved = True
+        self.user.verified = True
+        db.session.add(self.user)
+        return self.save()
+
+    def reject(self):
+        """Reject request."""
+        return self.delete()
 
 class User(Model, SurrogatePK):
+    """User model."""
+    __tablename__ = 'users'
 
     email = Column(db.String(80), unique=True, nullable=False, isPrivate=True)
     password = Column(db.LargeBinary(128), nullable=True, isInternal=True)
     verified = Column(db.Boolean(), default=False)
     user_type = Column(db.Enum(UserType), nullable=False)
 
-    def __init__(self, username, email, password=None, **kwargs):
-        """
-        Create a new User instance.
-        
-        Usage:
-            user = User(username='johndoe', email='john@example.com', password='secret')
-        
-        :param username: The user's username
-        :param email: The user's email address
-        :param password: The user's password (optional)
-        :param kwargs: Additional keyword arguments for other User attributes
-        """
-        super().__init__(username=username, email=email, **kwargs)
+    def __init__(self, email, password=None, **kwargs):
+        """Create instance."""
+        super().__init__(email=email, **kwargs)
         if password:
             self.set_password(password)
         else:
@@ -75,25 +90,31 @@ class User(Model, SurrogatePK):
         return bcrypt.check_password_hash(self.password, value)
 
     def generate_token(self, expiration=900):
-        """
-        Generate a timed JWT token for the user.
-        
-        Usage:
-            token, expiry = user.generate_token()
-            # or with custom expiration
-            token, expiry = user.generate_token(expiration=3600)  # 1 hour
-        
-        :param expiration: Token expiration time in seconds (default is 900 seconds / 15 minutes)
-        :return: A tuple containing the token and its expiration datetime
-        """
-        expires_on = dt.datetime.now() + dt.timedelta(seconds=expiration)
-        serializer = TJWSS(current_app.config['SECRET_KEY'], expires_in=expiration)
-        token = serializer.dumps({
-                'id': self.id,
-                'email': self.email,
-                'user_type': self.user_type
-            })
-        return token, expires_on
+        """Generate a timed authentication token."""
+        serializer = URLSafeTimedSerializer(
+            current_app.config['SECRET_KEY'],
+            salt='auth-token'
+        )
+        expiration_time = dt.datetime.utcnow() + dt.timedelta(seconds=expiration)
+        token_data = {
+            'id': self.id,
+            'email': self.email,
+            'exp': expiration_time.isoformat()
+        }
+        return serializer.dumps(token_data), expiration_time.isoformat()
+
+    @staticmethod
+    def check_token(token):
+        """Verify an authentication token."""
+        serializer = URLSafeTimedSerializer(
+            current_app.config['SECRET_KEY'],
+            salt='auth-token'
+        )
+        try:
+            data = serializer.loads(token, max_age=900)  # 15 minutes
+            return User.query.get(data['id'])
+        except (SignatureExpired, BadSignature):
+            return None
 
     def addUserToQueue(self, queue):
         """
@@ -108,31 +129,6 @@ class User(Model, SurrogatePK):
         if queue:
             queue.addUser(self)
 
-    @staticmethod
-    def check_token(token):
-        """
-        Verify and decode a JWT token, returning the associated User object if valid.
-        
-        Usage:
-            user = User.check_token(token)
-            if user:
-                print(f"Token is valid for user: {user.email}")
-            else:
-                print("Token is invalid or expired")
-        
-        :param token: The JWT token to verify
-        :return: The User object if the token is valid, None otherwise
-        """
-        serializer = TJWSS(current_app.config['SECRET_KEY'])
-        try:
-            data = serializer.loads(token)
-        except (SignatureExpired, BadSignature):
-            return None  # token has expired or is invalid
-
-        # Since the token contains the user id, we can load the object and return it
-        user = User.query.get(data['id'])
-        return user
-
     def generate_verification_token(self, expiration=604800):
         """
         Generate a URL-safe verification token for the user.
@@ -146,7 +142,10 @@ class User(Model, SurrogatePK):
         :return: A URL-safe verification token
         """
         serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-        return serializer.dumps(self.email, salt=current_app.config['EMAIL_VERIFICATION_SALT'])
+        return serializer.dumps(
+            self.email,
+            salt=current_app.config['EMAIL_VERIFICATION_SALT']
+        )
 
     @staticmethod
     def verify_token(token, expiration=604800):
@@ -173,6 +172,22 @@ class User(Model, SurrogatePK):
                 salt=current_app.config['EMAIL_VERIFICATION_SALT'],
                 max_age=expiration
             )
-        except:
+            return User.query.filter_by(email=email).first()
+        except (SignatureExpired, BadSignature):
             return None
-        return User.query.filter_by(email=email).first()
+    def get_role(self):
+        """
+        Get the user's role (user type).
+        
+        Usage:
+            role = user.get_role()
+            print(f"User's role is: {role}")
+        
+        :return: The user's role as a UserType enum value
+        """
+        return self.user_type
+    
+    def is_verified(self):
+        """Check if the user is verified."""
+        return self.verified
+
