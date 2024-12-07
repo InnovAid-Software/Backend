@@ -27,8 +27,13 @@ def register_extensions(app):
 def register_blueprints(app):
     from backend.routes import user as user_routes
     from backend.routes import queue as queue_routes
+    from backend.routes import catalog as catalog_routes
+    from backend.routes import schedule as schedule_routes
+    
     app.register_blueprint(user_routes.bp, url_prefix='/api/user')
     app.register_blueprint(queue_routes.bp, url_prefix='/api/queue')
+    app.register_blueprint(catalog_routes.bp, url_prefix='/api/catalog')
+    app.register_blueprint(schedule_routes.bp, url_prefix='/api/schedule')
     return None
 
 def configure_logger(app):
