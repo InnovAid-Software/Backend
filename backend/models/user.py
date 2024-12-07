@@ -48,9 +48,7 @@ class User(Model, SurrogatePK):
     verified = Column(db.Boolean(), default=False)
     user_type = Column(db.Enum(UserType), nullable=False)
 
-    # One-to-one relationship with Schedule
-    schedule = db.relationship('Schedule', backref=db.backref('student', uselist=False), uselist=False)
-
+    
     def __init__(self, email, password=None, **kwargs):
         """Create instance."""
         super().__init__(email=email, **kwargs)
@@ -193,13 +191,4 @@ class User(Model, SurrogatePK):
     def is_verified(self):
         """Check if the user is verified."""
         return self.verified
-
-    def get_or_create_schedule(self):
-        """Get existing schedule or create new one."""
-        if not self.schedule:
-            from backend.models import Schedule
-            self.schedule = Schedule(student_id=self.id)
-            db.session.add(self.schedule)
-            db.session.commit()
-        return self.schedule
 
