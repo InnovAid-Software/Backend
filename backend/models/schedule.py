@@ -11,7 +11,7 @@ class Schedule(Model, SurrogatePK):
     updated_at = Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    student = db.relationship('User', backref=db.backref('schedule', uselist=False))
+    student = db.relationship('User')
     sections = db.relationship('CourseSection', secondary='schedule_sections')
     
     def __init__(self, student_id, **kwargs):
