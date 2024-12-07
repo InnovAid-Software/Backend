@@ -49,7 +49,7 @@ class User(Model, SurrogatePK):
     user_type = Column(db.Enum(UserType), nullable=False)
 
     # One-to-one relationship with Schedule
-    schedule = db.relationship('Schedule', backref='student', uselist=False)
+    schedule = db.relationship('Schedule', backref=db.backref('student', uselist=False), uselist=False)
 
     def __init__(self, email, password=None, **kwargs):
         """Create instance."""

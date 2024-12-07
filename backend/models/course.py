@@ -1,6 +1,7 @@
 from backend.database import Model, SurrogatePK, Column
 from backend.extensions import db
 
+
 class Course(Model, SurrogatePK):
     """Course model."""
     __tablename__ = 'courses'
