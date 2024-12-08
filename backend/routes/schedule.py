@@ -40,17 +40,17 @@ def generate_schedules():
     for r in data['reserved']:
         reserved = CourseSection(
             department_id='RESV',
-            course_number='000',
+            course_number='0000',
             section_id='0',
             instructor='Reserved',
             days=''.join(r['days']),
             start_time=r['start_time'],
             end_time=r['end_time']
         )
-        reserved_sections.append([reserved])
+        reserved_sections.append(reserved)
     
     if reserved_sections:
-        all_sections.append(reserved_sections[0])
+        all_sections.append(reserved_sections)
 
     # Generate all possible combinations
     def cartesian_product(arrays):
@@ -65,8 +65,6 @@ def generate_schedules():
 
     # Filter out schedules with time conflicts
     def has_time_conflict(schedule):
-        days_order = {'M': 0, 'T': 1, 'W': 2, 'R': 3, 'F': 4}
-        
         for i in range(len(schedule)):
             for j in range(i + 1, len(schedule)):
                 section1, section2 = schedule[i], schedule[j]
@@ -76,9 +74,14 @@ def generate_schedules():
                 if not common_days:
                     continue
                     
+                # Convert times to integers for comparison
+                s1_start = int(section1.start_time)
+                s1_end = int(section1.end_time)
+                s2_start = int(section2.start_time)
+                s2_end = int(section2.end_time)
+                
                 # Check for time overlap on common days
-                if (section1.start_time <= section2.end_time and 
-                    section2.start_time <= section1.end_time):
+                if (s1_start <= s2_end and s2_start <= s1_end):
                     return True
         return False
 
