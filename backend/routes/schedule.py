@@ -91,7 +91,7 @@ def generate_schedules():
             'message': 'No valid schedules found - all possible combinations have time conflicts'
         }), 404
 
-    # Convert to JSON response format
+    # Convert to JSON response format, excluding reserved times
     response = [{
         'sections': [{
             'department_id': section.department_id,
@@ -101,7 +101,7 @@ def generate_schedules():
             'days': list(section.days),
             'start_time': section.start_time,
             'end_time': section.end_time
-        } for section in schedule]
+        } for section in schedule if section.department_id != 'RESV']
     } for schedule in valid_schedules]
 
     return jsonify(response)
