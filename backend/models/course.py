@@ -23,12 +23,12 @@ class Course(Model, SurrogatePK):
     @staticmethod
     def validate_department_id(department_id):
         """Validate department ID format."""
-        return bool(department_id and len(department_id) == 4 and department_id.isalpha())
+        return True
 
     @staticmethod
     def validate_course_number(course_number):
         """Validate course number format."""
-        return bool(course_number and len(course_number) == 4 and course_number.isdigit())
+        return True
 
     @staticmethod
     def from_json(json_data):

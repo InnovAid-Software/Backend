@@ -20,17 +20,34 @@ def save_courses():
     """Save courses to catalog (admin/root functionality)."""
     course_catalog = request.get_json()
     
+    if not isinstance(course_catalog, list):
+        return jsonify({'error': 'Invalid input format - expected a list of courses'}), 400
+
     try:
         for course_entry in course_catalog:
-            course = Course.from_json(course_entry)
-            course.validate()
+            # Normalize the data
+            normalized_entry = {
+                'departmentId': course_entry['departmentId'].strip().upper(),
+                'courseNumber': course_entry['courseNumber'].strip(),
+                'courseTitle': course_entry['courseTitle'].strip()
+            }
+            
+            course = Course.from_json(normalized_entry)
+            try:
+                course.validate()
+            except ValueError as ve:
+                return jsonify({
+                    'error': f"Validation failed for course {normalized_entry['departmentId']} {normalized_entry['courseNumber']}: {str(ve)}"
+                }), 400
+                
             db.session.add(course)
         
         db.session.commit()
         return jsonify({'message': 'Courses saved successfully'}), 201
-    except ValueError as e:
+        
+    except KeyError as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 400
+        return jsonify({'error': f'Missing required field: {str(e)}'}), 400
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
