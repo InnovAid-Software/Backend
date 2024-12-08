@@ -24,6 +24,10 @@ def save_courses():
         return jsonify({'error': 'Invalid input format - expected a list of courses'}), 400
 
     try:
+        # Delete all existing courses
+        Course.query.delete()
+        
+        # Now add the new courses
         for course_entry in course_catalog:
             # Normalize the data
             normalized_entry = {
@@ -78,6 +82,7 @@ def get_course_sections():
 def save_course_sections():
     """Save course sections to catalog (admin/root functionality)."""
     sectionCatalog = request.get_json()
+    CourseSection.query.delete()
 
     for sectionEntry in sectionCatalog:
         sectiondata = CourseSection(
