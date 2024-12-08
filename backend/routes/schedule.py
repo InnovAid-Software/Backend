@@ -33,8 +33,14 @@ def generate_schedules():
             department_id=course['department_id'],
             course_number=course['course_number']
         ).all()
-        if sections:
-            section_options.append(sections)
+        
+        # Add error handling for when no sections are found
+        if not sections:
+            return jsonify({
+                'message': f'No sections found for {course["department_id"]} {course["course_number"]}'
+            }), 404
+            
+        section_options.append(sections)
 
     # Add reserved times as sections if list exists and is not empty
     if 'reserved' in data and data['reserved'] and isinstance(data['reserved'], list):
@@ -52,8 +58,12 @@ def generate_schedules():
             reserved_sections.append(reserved)
         section_options.append(reserved_sections)
 
-    # Generate all possible combinations using itertools.product
+    # Add logging for debugging
     possible_schedules = list(product(*section_options))
+    if not possible_schedules:
+        return jsonify({
+            'message': 'No possible schedule combinations could be generated'
+        }), 404
 
     def check_overlap(schedule):
         for i in range(len(schedule)):
@@ -76,6 +86,10 @@ def generate_schedules():
 
     # Filter out schedules with conflicts
     valid_schedules = [schedule for schedule in possible_schedules if not check_overlap(schedule)]
+    if not valid_schedules:
+        return jsonify({
+            'message': 'No valid schedules found - all possible combinations have time conflicts'
+        }), 404
 
     # Convert to JSON response format
     response = [{
