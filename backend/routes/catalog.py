@@ -18,19 +18,19 @@ def get_courses():
 @bp.route('/courses', methods=['POST'])
 def save_courses():
     """Save courses to catalog (admin/root functionality)."""
-    courseCatalog = request.get_json()
-
-    for catalogCourseEntry in courseCatalog:
-        coursedata = Course(
-            department_id = catalogCourseEntry['departmentId'],
-            course_number = catalogCourseEntry['courseNumber'],
-            course_title = catalogCourseEntry['courseTitle']
-        )
-        db.session.add(coursedata)  # Move inside loop to add each course
-
+    course_catalog = request.get_json()
+    
     try:
+        for course_entry in course_catalog:
+            course = Course.from_json(course_entry)
+            course.validate()
+            db.session.add(course)
+        
         db.session.commit()
-        return jsonify({'message': 'Courses saved successfully'}), 201  # Fixed message
+        return jsonify({'message': 'Courses saved successfully'}), 201
+    except ValueError as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400

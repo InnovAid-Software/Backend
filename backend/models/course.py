@@ -29,3 +29,20 @@ class Course(Model, SurrogatePK):
     def validate_course_number(course_number):
         """Validate course number format."""
         return bool(course_number and len(course_number) == 4 and course_number.isdigit())
+
+    @staticmethod
+    def from_json(json_data):
+        """Convert JSON data to Course model."""
+        return Course(
+            department_id=json_data['departmentId'],
+            course_number=json_data['courseNumber'],
+            course_title=json_data['courseTitle']
+        )
+
+    def validate(self):
+        """Validate course data."""
+        if not self.validate_department_id(self.department_id):
+            raise ValueError("Department ID must be exactly 4 letters")
+        if not self.validate_course_number(self.course_number):
+            raise ValueError("Course number must be exactly 4 digits")
+        return True
