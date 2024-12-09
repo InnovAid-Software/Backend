@@ -7,6 +7,7 @@ class CourseSection(Model, SurrogatePK):
 
     department_id = Column(db.String(4), nullable=False)
     course_number = Column(db.String(4), nullable=False)
+    course_title = Column(db.String(100), nullable=False)
     section_id = Column(db.String(10), nullable=False)
     instructor = Column(db.String(100), nullable=False)
     days = Column(db.String(5), nullable=False)  # e.g., "MWF"

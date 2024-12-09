@@ -104,6 +104,7 @@ def save_course_sections():
         sectiondata = CourseSection(
             department_id=sectionEntry['departmentId'],
             course_number=sectionEntry['courseNumber'],
+            course_title=sectionEntry['courseTitle'],
             section_id=sectionEntry['sectionId'],
             instructor=sectionEntry['instructor'],
             days=sectionEntry['days'],
