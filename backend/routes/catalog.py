@@ -56,21 +56,32 @@ def save_courses():
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
+@bp.route('/courses/sections/all', methods=['GET'])
+def get_all_course_sections():
+    """Get all course sections."""
+    sections = CourseSection.query.all()
+    return jsonify([{
+        'department_id': cs.department_id,
+        'course_number': cs.course_number,
+        'section_id': cs.section_id,
+        'instructor': cs.instructor,
+        'days': cs.days,
+        'start_time': cs.start_time,
+        'end_time': cs.end_time
+    } for cs in sections])
+
 @bp.route('/courses/sections', methods=['GET'])
 def get_course_sections():
     """Get all sections for a specific course, or all sections if no course specified."""
     data = request.get_json()
-    
-    if not data:
-        sections = CourseSection.query.all()
-    else:
-        if not all(k in data for k in ['department_id', 'course_number']):
-            return jsonify({'message': 'Missing required fields'}), 400
 
-        sections = CourseSection.query.filter_by(
-            department_id=data['department_id'],
-            course_number=data['course_number']
-        ).all()
+    if not all(k in data for k in ['department_id', 'course_number']):
+        return jsonify({'message': 'Missing required fields'}), 400
+
+    sections = CourseSection.query.filter_by(
+        department_id=data['department_id'],
+        course_number=data['course_number']
+    ).all()
 
     return jsonify([{
         'department_id': cs.department_id,
