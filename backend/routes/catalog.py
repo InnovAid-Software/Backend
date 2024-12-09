@@ -63,6 +63,7 @@ def get_all_course_sections():
     return jsonify([{
         'department_id': cs.department_id,
         'course_number': cs.course_number,
+        'course_title': cs.course_title,
         'section_id': cs.section_id,
         'instructor': cs.instructor,
         'days': cs.days,
