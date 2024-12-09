@@ -58,15 +58,19 @@ def save_courses():
 
 @bp.route('/courses/sections', methods=['GET'])
 def get_course_sections():
-    """Get all sections for a specific course."""
+    """Get all sections for a specific course, or all sections if no course specified."""
     data = request.get_json()
-    if not all(k in data for k in ['department_id', 'course_number']):
-        return jsonify({'message': 'Missing required fields'}), 400
+    
+    if not data:
+        sections = CourseSection.query.all()
+    else:
+        if not all(k in data for k in ['department_id', 'course_number']):
+            return jsonify({'message': 'Missing required fields'}), 400
 
-    sections = CourseSection.query.filter_by(
-        department_id=data['department_id'],
-        course_number=data['course_number']
-    ).all()
+        sections = CourseSection.query.filter_by(
+            department_id=data['department_id'],
+            course_number=data['course_number']
+        ).all()
 
     return jsonify([{
         'department_id': cs.department_id,
